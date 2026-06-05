@@ -1,9 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ApiService {
-  // Substitua pela URL do seu projeto na Vercel
-  static const String baseUrl = 'https://felixadm.vercel.app/api';
+  // Se estiver na Web, usa o domínio atual. Se for App (Android/iOS), usa a URL completa.
+  // IMPORTANTE: Substitua pela sua URL final da Vercel para quando rodar como App Nativo.
+  static String get baseUrl {
+    if (kIsWeb) {
+      return '/api';
+    } else {
+      return 'https://felixadm.vercel.app/api';
+    }
+  }
 
   // --- CLIENTS ---
   static Future<List<dynamic>> getClients() async {
