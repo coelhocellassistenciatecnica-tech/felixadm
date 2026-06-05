@@ -1,0 +1,59 @@
+name: jennifer_felix
+description: Gestão completa para revendedoras de cosméticos
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite: ^2.3.2
+  path_provider: ^2.1.2
+  path: ^1.9.0
+  provider: ^6.1.2
+  intl: ^0.19.0
+  image_picker: ^1.1.2
+  flutter_local_notifications: ^17.2.2
+  local_auth: ^2.3.0
+  crypto: ^3.0.3
+  share_plus: ^10.0.2
+  file_picker: ^8.1.2
+  permission_handler: ^11.3.1
+  fl_chart: ^0.69.0
+  flutter_slidable: ^3.1.1
+  cached_network_image: ^3.4.1
+  uuid: ^4.4.2
+  shared_preferences: ^2.3.2
+  flutter_svg: ^2.0.10+1
+  lottie: ^3.1.2
+  shimmer: ^3.0.0
+  gap: ^3.0.1
+  mask_text_input_formatter: ^2.9.0
+  currency_text_input_formatter: ^2.1.6
+  google_fonts: ^6.2.1
+  flutter_staggered_animations: ^1.1.1
+  animations: ^2.0.11
+  archive: ^3.6.1
+  encrypt: ^5.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#F8BBD9"
+  adaptive_icon_foreground: "assets/icons/app_icon_fg.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
