@@ -43,7 +43,34 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  static Future<dynamic> updateProduct(int id, Map<String, dynamic> data) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/products/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(data),
+    );
+    return _handleResponse(response);
+  }
+
+  static Future<dynamic> deleteProduct(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/products/$id'));
+    return _handleResponse(response);
+  }
+
   // --- SALES ---
+  static Future<dynamic> getSaleById(int id) async {
+    final response = await http.get(Uri.parse('$baseUrl/sales/$id'));
+    return _handleResponse(response);
+  }
+
+  static Future<dynamic> registerPayment(int saleId, Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/sales/$saleId/payments'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(data),
+    );
+    return _handleResponse(response);
+  }
   static Future<List<dynamic>> getSales() async {
     final response = await http.get(Uri.parse('$baseUrl/sales'));
     return _handleResponse(response);

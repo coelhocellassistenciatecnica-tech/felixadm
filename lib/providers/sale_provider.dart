@@ -43,6 +43,54 @@ class SaleProvider extends ChangeNotifier {
     }
   }
 
+  Future<Sale?> getSaleById(int id) async {
+    try {
+      final data = await ApiService.getSaleById(id);
+      return Sale.fromMap(data);
+    } catch (e) {
+      debugPrint('Error getting sale: $e');
+      return null;
+    }
+  }
+
+  Future<void> registerPayment({
+    required int saleId,
+    required int clientId,
+    required String clientName,
+    required double amount,
+    required String paymentMethod,
+    int? installmentId,
+  }) async {
+    try {
+      await ApiService.registerPayment(saleId, {
+        'amount': amount,
+        'method': paymentMethod,
+        'installment_id': installmentId,
+      });
+      await loadSales();
+    } catch (e) {
+      debugPrint('Error registering payment: $e');
+    }
+  }
+
+  Future<void> loadSales({int? clientId, DateTime? from, DateTime? to}) async {
+    _loading = true;
+    notifyListeners();
+    try {
+      final List<dynamic> data = await ApiService.getSales();
+      _sales = data.map((json) => Sale.fromMap(json)).toList();
+      
+      if (clientId != null) {
+        _sales = _sales.where((s) => s.clientId == clientId).toList();
+      }
+    } catch (e) {
+      debugPrint('Error loading sales: $e');
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
   Future<Map<String, dynamic>> getDashboardStats() async {
     try {
       return await ApiService.getStats();

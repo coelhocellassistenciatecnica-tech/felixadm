@@ -49,5 +49,34 @@ class ProductProvider extends ChangeNotifier {
     }
   }
 
-  // Métodos de atualização e deleção podem ser integrados conforme necessário
+  Future<void> updateProduct(Product product) async {
+    if (product.id == null) return;
+    try {
+      await ApiService.updateProduct(product.id!, product.toMap());
+      await loadProducts();
+    } catch (e) {
+      debugPrint('Error updating product: $e');
+    }
+  }
+
+  Future<void> deleteProduct(int id) async {
+    try {
+      await ApiService.deleteProduct(id);
+      await loadProducts();
+    } catch (e) {
+      debugPrint('Error deleting product: $e');
+    }
+  }
+
+  Future<void> adjustStock(int id, int delta, String reason) async {
+    // Implementação simplificada para a API
+    try {
+      final p = _products.firstWhere((p) => p.id == id);
+      final newStock = p.stock + delta;
+      await ApiService.updateProduct(id, {'stock': newStock});
+      await loadProducts();
+    } catch (e) {
+      debugPrint('Error adjusting stock: $e');
+    }
+  }
 }
