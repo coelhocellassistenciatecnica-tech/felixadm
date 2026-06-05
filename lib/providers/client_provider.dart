@@ -1,9 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../models/client.dart';
-import '../database/client_dao.dart';
+import '../utils/api_service.dart';
 
 class ClientProvider extends ChangeNotifier {
-  final ClientDao _dao = ClientDao();
   List<Client> _clients = [];
   bool _loading = false;
   String _searchQuery = '';
@@ -15,9 +14,21 @@ class ClientProvider extends ChangeNotifier {
   Future<void> loadClients() async {
     _loading = true;
     notifyListeners();
-    _clients = await _dao.findAll(search: _searchQuery.isEmpty ? null : _searchQuery);
-    _loading = false;
-    notifyListeners();
+    try {
+      final List<dynamic> data = await ApiService.getClients();
+      _clients = data.map((json) => Client.fromMap(json)).toList();
+      
+      if (_searchQuery.isNotEmpty) {
+        _clients = _clients.where((c) => 
+          c.name.toLowerCase().contains(_searchQuery.toLowerCase())
+        ).toList();
+      }
+    } catch (e) {
+      debugPrint('Error loading clients: $e');
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
   }
 
   void setSearch(String q) {
@@ -25,22 +36,14 @@ class ClientProvider extends ChangeNotifier {
     loadClients();
   }
 
-  Future<Client?> getById(int id) => _dao.findById(id);
-
   Future<void> addClient(Client client) async {
-    await _dao.insert(client);
-    await loadClients();
+    try {
+      await ApiService.createClient(client.toMap());
+      await loadClients();
+    } catch (e) {
+      debugPrint('Error adding client: $e');
+    }
   }
 
-  Future<void> updateClient(Client client) async {
-    await _dao.update(client);
-    await loadClients();
-  }
-
-  Future<void> deleteClient(int id) async {
-    await _dao.delete(id);
-    await loadClients();
-  }
-
-  Future<int> count() => _dao.count();
+  // Métodos como update e delete podem ser implementados no ApiService futuramente
 }
