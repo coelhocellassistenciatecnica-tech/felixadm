@@ -1,0 +1,158 @@
+workflows:
+
+  # ──────────────────────────────────────────────
+  # iOS — .ipa para sideload (AltStore / Sideloadly)
+  # Não requer conta Apple Developer
+  # ──────────────────────────────────────────────
+  ios-sideload:
+    name: iOS IPA (Sideload)
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+
+    environment:
+      flutter: 3.22.0
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Instalar dependências Flutter
+        script: flutter pub get
+
+      - name: Instalar pods
+        script: |
+          cd ios
+          pod install
+          cd ..
+
+      - name: Build iOS sem assinatura
+        script: |
+          flutter build ios --release --no-codesign
+
+      - name: Criar .ipa
+        script: |
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r JenniferFelix.ipa Payload/
+          rm -rf Payload/
+
+    artifacts:
+      - JenniferFelix.ipa
+
+    publishing:
+      email:
+        recipients:
+          - $CM_COMMIT_EMAIL
+        notify:
+          success: true
+          failure: true
+
+  # ──────────────────────────────────────────────
+  # iOS — TestFlight (requer conta Apple Developer)
+  # Configure os secrets no painel do Codemagic:
+  #   APP_STORE_CONNECT_API_KEY_ID
+  #   APP_STORE_CONNECT_ISSUER_ID
+  #   APP_STORE_CONNECT_PRIVATE_KEY
+  #   CERTIFICATE_PRIVATE_KEY
+  # ──────────────────────────────────────────────
+  ios-testflight:
+    name: iOS TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+
+    integrations:
+      app_store_connect: Apple Developer
+
+    environment:
+      flutter: 3.22.0
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.jenniferfelix.app
+
+    scripts:
+      - name: Instalar dependências Flutter
+        script: flutter pub get
+
+      - name: Instalar pods
+        script: |
+          cd ios
+          pod install
+          cd ..
+
+      - name: Build e assinar iOS
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Testadores
+
+  # ──────────────────────────────────────────────
+  # Android — APK para instalação direta
+  # ──────────────────────────────────────────────
+  android-apk:
+    name: Android APK
+    max_build_duration: 45
+    instance_type: linux_x2
+
+    environment:
+      flutter: 3.22.0
+      java: 17
+
+    scripts:
+      - name: Instalar dependências Flutter
+        script: flutter pub get
+
+      - name: Build APK release
+        script: |
+          flutter build apk --release --split-per-abi
+
+    artifacts:
+      - build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+      - build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+
+    publishing:
+      email:
+        recipients:
+          - $CM_COMMIT_EMAIL
+        notify:
+          success: true
+          failure: true
+
+  # ──────────────────────────────────────────────
+  # Android — Google Play (requer conta Developer)
+  # ──────────────────────────────────────────────
+  android-play-store:
+    name: Android Play Store
+    max_build_duration: 45
+    instance_type: linux_x2
+
+    environment:
+      flutter: 3.22.0
+      java: 17
+      android_signing:
+        - jenniferfelix_keystore
+
+    scripts:
+      - name: Instalar dependências Flutter
+        script: flutter pub get
+
+      - name: Build App Bundle
+        script: |
+          flutter build appbundle --release
+
+    artifacts:
+      - build/app/outputs/bundle/release/app-release.aab
+
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
