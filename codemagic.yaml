@@ -36,14 +36,6 @@ workflows:
     artifacts:
       - JenniferFelix-Sideload.ipa
 
-    publishing:
-      email:
-        recipients:
-          - $CM_COMMIT_EMAIL
-        notify:
-          success: true
-          failure: true
-
   # ─────────────────────────────────────────────────────────
   # iOS — TestFlight / App Store
   # Requer conta Apple Developer ($99/ano)
@@ -101,12 +93,6 @@ workflows:
         submit_to_testflight: true
         beta_groups:
           - Testadores
-      email:
-        recipients:
-          - $CM_COMMIT_EMAIL
-        notify:
-          success: true
-          failure: true
 
   # ─────────────────────────────────────────────────────────
   # Android — APK para instalação direta
@@ -131,11 +117,3 @@ workflows:
     artifacts:
       - build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
       - build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-
-    publishing:
-      email:
-        recipients:
-          - $CM_COMMIT_EMAIL
-        notify:
-          success: true
-          failure: true
