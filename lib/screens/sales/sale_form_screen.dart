@@ -5,6 +5,7 @@ import '../../models/client.dart';
 import '../../models/product.dart';
 import '../../models/sale.dart';
 import '../../models/sale_item.dart';
+import '../../models/installment.dart'; // Importar o modelo de parcela
 import '../../providers/client_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/sale_provider.dart';
