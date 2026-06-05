@@ -13,17 +13,31 @@ import 'screens/home_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('pt_BR', null);
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-  ));
-  runApp(const JenniferFelixApp());
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    
+    try {
+      await initializeDateFormatting('pt_BR', null);
+    } catch (e) {
+      debugPrint('Erro ao inicializar data: $e');
+    }
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ));
+    
+    runApp(const JenniferFelixApp());
+  } catch (e) {
+    debugPrint('Erro fatal na inicialização: $e');
+    // Tenta rodar o app mesmo se algo falhar
+    runApp(const JenniferFelixApp());
+  }
 }
 
 class JenniferFelixApp extends StatelessWidget {
@@ -77,13 +91,20 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   Future<void> _navigate() async {
-    final auth = context.read<AuthProvider>();
-    await auth.init();
-    if (!mounted) return;
-    if (!auth.hasPin) {
-      Navigator.pushReplacementNamed(context, '/setup-pin');
-    } else {
-      Navigator.pushReplacementNamed(context, '/login');
+    try {
+      final auth = context.read<AuthProvider>();
+      await auth.init().timeout(const Duration(seconds: 5));
+      if (!mounted) return;
+      if (!auth.hasPin) {
+        Navigator.pushReplacementNamed(context, '/setup-pin');
+      } else {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    } catch (e) {
+      debugPrint('Erro ao navegar: $e');
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/setup-pin');
+      }
     }
   }
 
