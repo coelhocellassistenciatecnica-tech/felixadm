@@ -39,8 +39,8 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> with SingleTick
     _sales = await context.read<SaleProvider>().sales.isEmpty
         ? await _fetchSales()
         : context.read<SaleProvider>().sales.where((s) => s.clientId == widget.clientId).toList();
-    _totalPurchased = _sales.fold(0, (sum, s) => sum + s.finalAmount);
-    _totalPending = _sales.fold(0, (sum, s) => sum + s.remaining);
+    _totalPurchased = _sales.fold<double>(0.0, (sum, s) => sum + s.finalAmount);
+    _totalPending = _sales.fold<double>(0.0, (sum, s) => sum + s.remaining);
     setState(() => _loading = false);
   }
 
