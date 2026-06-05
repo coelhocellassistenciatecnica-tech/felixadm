@@ -1,0 +1,60 @@
+name: Build iOS IPA (Sideload)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build Flutter iOS .ipa
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Instalar dependências
+        run: flutter pub get
+
+      - name: Instalar CocoaPods
+        run: |
+          cd ios
+          pod install --repo-update
+          cd ..
+
+      - name: Build iOS (sem assinatura)
+        run: |
+          flutter build ios --release --no-codesign
+
+      - name: Criar .ipa para sideload
+        run: |
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r JenniferFelix.ipa Payload/
+          rm -rf Payload/
+
+      - name: Upload .ipa como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: JenniferFelix-iOS-${{ github.sha }}
+          path: JenniferFelix.ipa
+          retention-days: 30
+
+      - name: Informações do build
+        run: |
+          echo "✅ Build concluído!"
+          echo "📱 Arquivo: JenniferFelix.ipa"
+          echo "📥 Baixe em: Actions > Este workflow > Artifacts"
+          echo ""
+          echo "Instalar via:"
+          echo "  AltStore  → https://altstore.io"
+          echo "  Sideloadly → https://sideloadly.io"
+          ls -lh JenniferFelix.ipa
