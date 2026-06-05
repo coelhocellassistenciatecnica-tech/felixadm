@@ -10,12 +10,16 @@ class SaleProvider extends ChangeNotifier {
   List<Sale> get sales => _sales;
   bool get loading => _loading;
 
-  Future<void> loadSales() async {
+  Future<void> loadSales({int? clientId, DateTime? from, DateTime? to}) async {
     _loading = true;
     notifyListeners();
     try {
       final List<dynamic> data = await ApiService.getSales();
       _sales = data.map((json) => Sale.fromMap(json)).toList();
+      
+      if (clientId != null) {
+        _sales = _sales.where((s) => s.clientId == clientId).toList();
+      }
     } catch (e) {
       debugPrint('Error loading sales: $e');
     } finally {
@@ -70,24 +74,6 @@ class SaleProvider extends ChangeNotifier {
       await loadSales();
     } catch (e) {
       debugPrint('Error registering payment: $e');
-    }
-  }
-
-  Future<void> loadSales({int? clientId, DateTime? from, DateTime? to}) async {
-    _loading = true;
-    notifyListeners();
-    try {
-      final List<dynamic> data = await ApiService.getSales();
-      _sales = data.map((json) => Sale.fromMap(json)).toList();
-      
-      if (clientId != null) {
-        _sales = _sales.where((s) => s.clientId == clientId).toList();
-      }
-    } catch (e) {
-      debugPrint('Error loading sales: $e');
-    } finally {
-      _loading = false;
-      notifyListeners();
     }
   }
 
