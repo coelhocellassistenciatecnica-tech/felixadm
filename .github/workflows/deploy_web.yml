@@ -4,12 +4,16 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'public/**' # Evita loop infinito quando o próprio action faz push na main
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -23,11 +27,12 @@ jobs:
       - name: Build Web
         run: flutter build web --release --base-href "/"
         
-      - name: Deploy to Release Branch
-        uses: s0/git-publish-subdir-action@develop
-        env:
-          REPO: self
-          BRANCH: release
-          FOLDER: build/web
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MESSAGE: "Deploy: ({sha}) {msg}"
+      - name: Deploy to Main Branch (Public Folder)
+        run: |
+          mkdir -p public
+          cp -r build/web/* public/
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/
+          git commit -m "chore: update public web build [skip ci]" || echo "No changes to commit"
+          git push origin main
