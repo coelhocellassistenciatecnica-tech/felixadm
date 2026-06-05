@@ -93,7 +93,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Future<void> _navigate() async {
     try {
       final auth = context.read<AuthProvider>();
-      await auth.init().timeout(const Duration(seconds: 5));
+      await auth.init().timeout(const Duration(seconds: 10));
       if (!mounted) return;
       if (!auth.hasPin) {
         Navigator.pushReplacementNamed(context, '/setup-pin');
