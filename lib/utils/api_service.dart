@@ -28,6 +28,25 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  static Future<dynamic> getClientById(int id) async {
+    final response = await http.get(Uri.parse('$baseUrl/clients/$id'));
+    return _handleResponse(response);
+  }
+
+  static Future<dynamic> updateClient(int id, Map<String, dynamic> data) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/clients/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(data),
+    );
+    return _handleResponse(response);
+  }
+
+  static Future<dynamic> deleteClient(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/clients/$id'));
+    return _handleResponse(response);
+  }
+
   // --- PRODUCTS ---
   static Future<List<dynamic>> getProducts() async {
     final response = await http.get(Uri.parse('$baseUrl/products'));
