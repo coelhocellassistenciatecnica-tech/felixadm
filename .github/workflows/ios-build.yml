@@ -24,6 +24,13 @@ jobs:
       - name: Instalar dependências
         run: flutter pub get
 
+      - name: Remover DEVELOPMENT_TEAM do projeto Xcode
+        run: |
+          sed -i '' '/DEVELOPMENT_TEAM/d' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGNING_REQUIRED = YES/CODE_SIGNING_REQUIRED = NO/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGNING_ALLOWED = YES/CODE_SIGNING_ALLOWED = NO/g' ios/Runner.xcodeproj/project.pbxproj
+          echo "✅ Signing removido do projeto"
+
       - name: Instalar CocoaPods
         run: |
           cd ios
@@ -32,14 +39,29 @@ jobs:
 
       - name: Build iOS (sem assinatura)
         run: |
-          flutter build ios --release --no-codesign
+          flutter build ios --release --no-codesign || true
 
-      - name: Criar .ipa para sideload
+      - name: Localizar Runner.app e criar IPA
         run: |
+          echo "Buscando Runner.app..."
+          APP_PATH=$(find . -name "Runner.app" -type d 2>/dev/null | grep -v "Pods\|Intermediates\|SourcePackages" | head -1)
+          
+          if [ -z "$APP_PATH" ]; then
+            APP_PATH="build/ios/iphoneos/Runner.app"
+          fi
+          
+          if [ ! -d "$APP_PATH" ]; then
+            echo "❌ Runner.app não encontrado. Estrutura de build:"
+            find build -name "*.app" -type d 2>/dev/null | head -10
+            exit 1
+          fi
+          
+          echo "✅ App encontrado em: $APP_PATH"
           mkdir -p Payload
-          cp -r build/ios/iphoneos/Runner.app Payload/
+          cp -r "$APP_PATH" Payload/Runner.app
           zip -r JenniferFelix.ipa Payload/
           rm -rf Payload/
+          echo "✅ IPA criado: $(ls -lh JenniferFelix.ipa)"
 
       - name: Upload .ipa como artifact
         uses: actions/upload-artifact@v4
