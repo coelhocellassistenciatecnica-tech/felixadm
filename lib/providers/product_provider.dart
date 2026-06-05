@@ -26,7 +26,7 @@ class ProductProvider extends ChangeNotifier {
         ).toList();
       }
       
-      _lowStock = _products.where((p) => p.stock <= 5).toList();
+      _lowStock = _products.where((p) => p.stockQuantity <= p.minStockAlert).toList();
     } catch (e) {
       debugPrint('Error loading products: $e');
     } finally {
@@ -69,14 +69,18 @@ class ProductProvider extends ChangeNotifier {
   }
 
   Future<void> adjustStock(int id, int delta, String reason) async {
-    // Implementação simplificada para a API
     try {
       final p = _products.firstWhere((p) => p.id == id);
-      final newStock = p.stock + delta;
-      await ApiService.updateProduct(id, {'stock': newStock});
+      final newStock = p.stockQuantity + delta;
+      await ApiService.updateProduct(id, {'stock_quantity': newStock});
       await loadProducts();
     } catch (e) {
       debugPrint('Error adjusting stock: $e');
     }
+  }
+
+  Future<int> totalStock() async {
+    if (_products.isEmpty) await loadProducts();
+    return _products.fold(0, (sum, p) => sum + p.stockQuantity);
   }
 }
