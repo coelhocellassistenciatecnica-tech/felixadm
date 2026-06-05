@@ -20,7 +20,7 @@ workflows:
 
       - name: Pod install
         script: |
-          find . -name "Podfile" -execdir pod install \;
+          cd ios && pod install && cd ..
 
       - name: Build iOS sem assinatura
         script: |
@@ -28,9 +28,10 @@ workflows:
 
       - name: Empacotar .ipa
         script: |
+          cd build/ios/iphoneos
           mkdir -p Payload
-          cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r JenniferFelix.ipa Payload/
+          cp -r Runner.app Payload/
+          zip -r ../../../JenniferFelix.ipa Payload/
           rm -rf Payload/
 
     artifacts:
