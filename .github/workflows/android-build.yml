@@ -30,6 +30,33 @@ jobs:
       - name: Instalar dependências
         run: flutter pub get
 
+      - name: Gerar ícones mipmap do Android
+        run: |
+          python3 - << 'PYEOF'
+          import struct, zlib, os
+
+          def make_png(w, h, rgb):
+              def chunk(name, data):
+                  c = name + data
+                  return struct.pack('>I', len(data)) + c + struct.pack('>I', zlib.crc32(c) & 0xffffffff)
+              sig = b'\x89PNG\r\n\x1a\n'
+              ihdr = chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0))
+              raw = b''.join(b'\x00' + bytes(rgb) * w for _ in range(h))
+              idat = chunk(b'IDAT', zlib.compress(raw))
+              iend = chunk(b'IEND', b'')
+              return sig + ihdr + idat + iend
+
+          color = (248, 187, 217)
+          sizes = [('mipmap-mdpi',48),('mipmap-hdpi',72),('mipmap-xhdpi',96),('mipmap-xxhdpi',144),('mipmap-xxxhdpi',192)]
+          for folder, sz in sizes:
+              d = f'android/app/src/main/res/{folder}'
+              os.makedirs(d, exist_ok=True)
+              data = make_png(sz, sz, color)
+              for name in ['ic_launcher.png','ic_launcher_round.png']:
+                  with open(f'{d}/{name}','wb') as f: f.write(data)
+              print(f'✅ {folder}: {sz}x{sz}px')
+          PYEOF
+
       - name: Criar local.properties com versão do app
         run: |
           echo "flutter.versionCode=1" >> android/local.properties
