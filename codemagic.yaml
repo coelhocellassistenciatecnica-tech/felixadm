@@ -15,9 +15,9 @@ workflows:
       cocoapods: default
       vars:
         CODE_SIGNING_REQUIRED: "NO"
-        CODE_SIGN_IDENTITY: ""
+        CODE_SIGN_IDENTITY: "NO"
         CODE_SIGNING_ALLOWED: "NO"
-        DEVELOPMENT_TEAM: ""
+        DEVELOPMENT_TEAM: "NO"
 
     scripts:
       - name: Instalar dependências Flutter
@@ -35,9 +35,9 @@ workflows:
             -sdk iphoneos \
             -configuration Release \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_IDENTITY="NO" \
             CODE_SIGNING_ALLOWED=NO \
-            DEVELOPMENT_TEAM="" \
+            DEVELOPMENT_TEAM="NO" \
             FLUTTER_BUILD_DIR=build \
             FLUTTER_ROOT="$HOME/programs/flutter" \
             -derivedDataPath ios/DerivedData \
