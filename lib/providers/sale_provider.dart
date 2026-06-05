@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/sale.dart';
 import '../models/sale_item.dart';
+import '../models/installment.dart'; // Importar o modelo de parcela
 import '../database/sale_dao.dart'; // Importar o DAO de vendas
 import '../database/client_dao.dart'; // Importar o DAO de clientes para stats
 import '../database/product_dao.dart'; // Importar o DAO de produtos
@@ -93,6 +94,8 @@ class SaleProvider extends ChangeNotifier {
         final InstallmentDao installmentDao = InstallmentDao();
         await installmentDao.markPaid(installmentId, amount, DateTime.now());
       }
+    } catch (e) {
+      debugPrint('Error registering payment: $e');
     }
   }
 

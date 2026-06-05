@@ -102,7 +102,7 @@ class AppTheme {
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: AppColors.surface,
         elevation: 2,
         shadowColor: AppColors.primary.withOpacity(0.15),
@@ -199,7 +199,7 @@ class AppTheme {
         space: 1,
       ),
       scaffoldBackgroundColor: AppColors.background,
-      dialogTheme: DialogThemeData(
+      dialogTheme: DialogTheme(
         backgroundColor: AppColors.surface,
         elevation: 8,
         shape: RoundedRectangleBorder(

@@ -298,9 +298,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showNotifications(BuildContext ctx, InstallmentProvider inst) {
+  Future<void> _showNotifications(BuildContext ctx, InstallmentProvider inst) async {
     try {
       await inst.load(); // Ensure installments are loaded before showing notifications
+      if (!mounted) return;
       showModalBottomSheet(
         context: ctx,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
