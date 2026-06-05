@@ -45,5 +45,39 @@ class ClientProvider extends ChangeNotifier {
     }
   }
 
-  // Métodos como update e delete podem ser implementados no ApiService futuramente
+  Future<void> updateClient(Client client) async {
+    if (client.id == null) return;
+    try {
+      await ApiService.updateClient(client.id!, client.toMap());
+      await loadClients();
+    } catch (e) {
+      debugPrint('Error updating client: $e');
+    }
+  }
+
+  Future<void> deleteClient(int id) async {
+    try {
+      await ApiService.deleteClient(id);
+      await loadClients();
+    } catch (e) {
+      debugPrint('Error deleting client: $e');
+    }
+  }
+
+  Future<Client?> getById(int id) async {
+    final found = _clients.where((c) => c.id == id).toList();
+    if (found.isNotEmpty) return found.first;
+    try {
+      final data = await ApiService.getClientById(id);
+      return Client.fromMap(data);
+    } catch (e) {
+      debugPrint('Error getting client: $e');
+      return null;
+    }
+  }
+
+  Future<int> count() async {
+    if (_clients.isEmpty) await loadClients();
+    return _clients.length;
+  }
 }
