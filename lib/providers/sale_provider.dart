@@ -94,8 +94,8 @@ class SaleProvider extends ChangeNotifier {
     if (_sales.isEmpty) await loadSales();
     final monthly = _sales.where((s) =>
       s.saleDate.year == year && s.saleDate.month == month).toList();
-    final totalAmount = monthly.fold(0.0, (sum, s) => sum + s.finalAmount);
-    final totalReceived = monthly.fold(0.0, (sum, s) => sum + s.amountPaid);
+    final totalAmount = monthly.fold<double>(0.0, (sum, s) => sum + s.finalAmount);
+    final totalReceived = monthly.fold<double>(0.0, (sum, s) => sum + s.amountPaid);
     final totalPending = totalAmount - totalReceived;
     return {
       'total_sales': monthly.length,
@@ -109,8 +109,7 @@ class SaleProvider extends ChangeNotifier {
     if (_sales.isEmpty) await loadSales();
     final monthly = _sales.where((s) =>
       s.saleDate.year == year && s.saleDate.month == month).toList();
-    // Estimate profit as 30% of total amount (no item cost data without fetching each sale)
-    final totalAmount = monthly.fold(0.0, (sum, s) => sum + s.finalAmount);
+    final totalAmount = monthly.fold<double>(0.0, (sum, s) => sum + s.finalAmount);
     return totalAmount * 0.30;
   }
 
