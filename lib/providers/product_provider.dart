@@ -81,6 +81,6 @@ class ProductProvider extends ChangeNotifier {
 
   Future<int> totalStock() async {
     if (_products.isEmpty) await loadProducts();
-    return _products.fold(0, (sum, p) => sum + p.stockQuantity);
+    return _products.fold<int>(0, (sum, p) => sum + p.stockQuantity);
   }
 }
