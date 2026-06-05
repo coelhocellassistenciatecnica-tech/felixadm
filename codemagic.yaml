@@ -22,77 +22,19 @@ workflows:
         script: |
           find . -name "Podfile" -execdir pod install \;
 
-      - name: Build iOS (sem assinatura)
+      - name: Build iOS sem assinatura
         script: |
           flutter build ios --release --no-codesign
 
-      - name: Empacotar .ipa para sideload
+      - name: Empacotar .ipa
         script: |
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r JenniferFelix-Sideload.ipa Payload/
+          zip -r JenniferFelix.ipa Payload/
           rm -rf Payload/
 
     artifacts:
-      - JenniferFelix-Sideload.ipa
-
-  # ─────────────────────────────────────────────────────────
-  # iOS — TestFlight / App Store
-  # Requer conta Apple Developer ($99/ano)
-  # Configure em Codemagic > Teams > Integrations:
-  #   → App Store Connect API Key
-  # ─────────────────────────────────────────────────────────
-  ios-testflight:
-    name: iOS TestFlight / App Store
-    max_build_duration: 60
-    instance_type: mac_mini_m2
-
-    integrations:
-      app_store_connect: codemagic
-
-    environment:
-      flutter: 3.22.0
-      xcode: latest
-      cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.jenniferfelix.app
-
-    scripts:
-      - name: Inicializar keychain
-        script: keychain initialize
-
-      - name: Buscar perfis de assinatura
-        script: app-store-connect fetch-signing-files com.jenniferfelix.app --type IOS_APP_STORE --create
-
-      - name: Adicionar certificados ao keychain
-        script: keychain add-certificates
-
-      - name: Instalar dependências Flutter
-        script: flutter pub get
-
-      - name: Pod install
-        script: |
-          find . -name "Podfile" -execdir pod install \;
-
-      - name: Atualizar configurações de assinatura Xcode
-        script: xcode-project use-profiles
-
-      - name: Build IPA Flutter
-        script: |
-          flutter build ipa --release \
-            --export-options-plist=$HOME/export_options.plist
-
-    artifacts:
-      - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
-
-    publishing:
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
-        beta_groups:
-          - Testadores
+      - JenniferFelix.ipa
 
   # ─────────────────────────────────────────────────────────
   # Android — APK para instalação direta
