@@ -13,6 +13,11 @@ workflows:
       flutter: 3.22.0
       xcode: latest
       cocoapods: default
+      vars:
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGN_IDENTITY: ""
+        CODE_SIGNING_ALLOWED: "NO"
+        DEVELOPMENT_TEAM: ""
 
     scripts:
       - name: Instalar dependências Flutter
@@ -24,15 +29,29 @@ workflows:
 
       - name: Build iOS sem assinatura
         script: |
-          flutter build ios --release --no-codesign
+          xcodebuild \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -sdk iphoneos \
+            -configuration Release \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM="" \
+            FLUTTER_BUILD_DIR=build \
+            FLUTTER_ROOT="$HOME/programs/flutter" \
+            -derivedDataPath ios/DerivedData \
+            clean build
 
       - name: Empacotar .ipa
         script: |
-          cd build/ios/iphoneos
+          APP_PATH=$(find ios/DerivedData -name "Runner.app" -type d | head -1)
+          echo "App encontrado em: $APP_PATH"
           mkdir -p Payload
-          cp -r Runner.app Payload/
-          zip -r ../../../JenniferFelix.ipa Payload/
+          cp -r "$APP_PATH" Payload/Runner.app
+          zip -r JenniferFelix.ipa Payload/
           rm -rf Payload/
+          echo "IPA criado: $(ls -lh JenniferFelix.ipa)"
 
     artifacts:
       - JenniferFelix.ipa
