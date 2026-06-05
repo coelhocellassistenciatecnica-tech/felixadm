@@ -51,12 +51,33 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
       city: _city.text.isEmpty ? null : _city.text.trim(),
       notes: _notes.text.isEmpty ? null : _notes.text.trim(),
     );
-    if (widget.client == null) {
-      await prov.addClient(client);
-    } else {
-      await prov.updateClient(client);
+    try {
+      if (widget.client == null) {
+        await prov.addClient(client);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Cliente cadastrado com sucesso! ✓"), backgroundColor: AppColors.success),
+          );
+        }
+      } else {
+        await prov.updateClient(client);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Cliente atualizado com sucesso! ✓"), backgroundColor: AppColors.success),
+          );
+        }
+      }
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      debugPrint("Error saving client: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erro ao salvar cliente: $e"), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      setState(() => _saving = false);
     }
-    if (mounted) Navigator.pop(context);
   }
 
   @override

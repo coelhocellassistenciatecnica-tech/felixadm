@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
 import '../models/client.dart';
-import '../utils/api_service.dart';
+import '../database/client_dao.dart'; // Importar o DAO de clientes
 
 class ClientProvider extends ChangeNotifier {
   List<Client> _clients = [];
   bool _loading = false;
   String _searchQuery = '';
+  final ClientDao _clientDao = ClientDao(); // Instância do DAO
 
   List<Client> get clients => _clients;
   bool get loading => _loading;
@@ -15,16 +16,9 @@ class ClientProvider extends ChangeNotifier {
     _loading = true;
     notifyListeners();
     try {
-      final List<dynamic> data = await ApiService.getClients();
-      _clients = data.map((json) => Client.fromMap(json)).toList();
-      
-      if (_searchQuery.isNotEmpty) {
-        _clients = _clients.where((c) => 
-          c.name.toLowerCase().contains(_searchQuery.toLowerCase())
-        ).toList();
-      }
+      _clients = await _clientDao.findAll(search: _searchQuery);
     } catch (e) {
-      debugPrint('Error loading clients: $e');
+      debugPrint('Error loading clients from local DB: $e');
     } finally {
       _loading = false;
       notifyListeners();
@@ -38,40 +32,48 @@ class ClientProvider extends ChangeNotifier {
 
   Future<void> addClient(Client client) async {
     try {
-      await ApiService.createClient(client.toMap());
-      await loadClients();
+      final id = await _clientDao.insert(client);
+      // Criar uma nova instância de Client com o ID gerado pelo banco de dados
+      final newClient = client.copyWith(id: id);
+      _clients.add(newClient);
+      notifyListeners();
     } catch (e) {
-      debugPrint('Error adding client: $e');
+      debugPrint('Error adding client to local DB: $e');
     }
   }
 
   Future<void> updateClient(Client client) async {
     if (client.id == null) return;
     try {
-      await ApiService.updateClient(client.id!, client.toMap());
-      await loadClients();
+      await _clientDao.update(client);
+      final index = _clients.indexWhere((c) => c.id == client.id);
+      if (index != -1) {
+        _clients[index] = client; // Atualiza o cliente na lista
+        notifyListeners();
+      }
     } catch (e) {
-      debugPrint('Error updating client: $e');
+      debugPrint('Error updating client in local DB: $e');
     }
   }
 
   Future<void> deleteClient(int id) async {
     try {
-      await ApiService.deleteClient(id);
-      await loadClients();
+      await _clientDao.delete(id);
+      _clients.removeWhere((c) => c.id == id);
+      notifyListeners();
     } catch (e) {
-      debugPrint('Error deleting client: $e');
+      debugPrint('Error deleting client from local DB: $e');
     }
   }
 
   Future<Client?> getById(int id) async {
     final found = _clients.where((c) => c.id == id).toList();
     if (found.isNotEmpty) return found.first;
+    
     try {
-      final data = await ApiService.getClientById(id);
-      return Client.fromMap(data);
+      return await _clientDao.findById(id);
     } catch (e) {
-      debugPrint('Error getting client: $e');
+      debugPrint('Error getting client from local DB: $e');
       return null;
     }
   }

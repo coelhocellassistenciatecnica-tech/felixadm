@@ -21,7 +21,18 @@ class _ProductListScreenState extends State<ProductListScreen> with SingleTicker
   void initState() {
     super.initState();
     _tabs = TabController(length: 2, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.read<ProductProvider>().loadProducts());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await context.read<ProductProvider>().loadProducts();
+      } catch (e) {
+        debugPrint("Error loading products: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Erro ao carregar produtos: $e"), backgroundColor: AppColors.error),
+          );
+        }
+      }
+    });
   }
 
   @override
@@ -150,6 +161,22 @@ class _ProductListScreenState extends State<ProductListScreen> with SingleTicker
         ],
       ),
     );
-    if (ok == true) await prov.deleteProduct(id);
+    if (ok == true) {
+      try {
+        await prov.deleteProduct(id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Produto excluído com sucesso! ✓"), backgroundColor: AppColors.success),
+          );
+        }
+      } catch (e) {
+        debugPrint("Error deleting product: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Erro ao excluir produto: $e"), backgroundColor: AppColors.error),
+          );
+        }
+      }
+    }
   }
 }

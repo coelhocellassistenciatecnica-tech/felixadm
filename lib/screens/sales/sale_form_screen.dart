@@ -84,7 +84,6 @@ class _SaleFormScreenState extends State<SaleFormScreen> {
       notes: _notesCtrl.text.isEmpty ? null : _notesCtrl.text,
     );
     final items = _cart.map((i) => SaleItem(
-      saleId: 0,
       productId: i.product.id!,
       productName: i.product.name,
       productBrand: i.product.brand,
@@ -92,7 +91,24 @@ class _SaleFormScreenState extends State<SaleFormScreen> {
       costPrice: i.product.costPrice,
       quantity: i.qty,
     )).toList();
-    await prov.createSale(sale, items);
+
+    List<Installment> installments = [];
+    if (_paymentType == PaymentType.installments && _installments > 1) {
+      final double installmentAmount = _total / _installments;
+      for (int i = 0; i < _installments; i++) {
+        installments.add(Installment(
+          saleId: 0, // Será preenchido pelo DAO após a inserção da venda
+          clientId: _selectedClient!.id!,
+          clientName: _selectedClient!.name,
+          installmentNumber: i + 1,
+          totalInstallments: _installments,
+          amount: installmentAmount,
+          dueDate: _saleDate.add(Duration(days: (i + 1) * 30)), // Exemplo: 30 dias por parcela
+        ));
+      }
+    }
+
+    await prov.createSale(sale, items, installments);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Venda registrada com sucesso! ✓'), backgroundColor: AppColors.success));
       Navigator.pop(context);

@@ -20,7 +20,9 @@ app.add_middleware(
 )
 
 def get_db_connection():
-    conn = psycopg2.connect(os.environ.get('POSTGRES_URL'), cursor_factory=RealDictCursor)
+    postgres_url = os.environ.get('POSTGRES_URL')
+    print(f"POSTGRES_URL: {postgres_url}")
+    conn = psycopg2.connect(postgres_url, cursor_factory=RealDictCursor)
     return conn
 
 @app.on_event("startup")

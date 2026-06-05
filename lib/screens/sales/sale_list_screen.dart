@@ -19,7 +19,18 @@ class _SaleListScreenState extends State<SaleListScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.read<SaleProvider>().loadSales());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await context.read<SaleProvider>().loadSales();
+      } catch (e) {
+        debugPrint("Error loading sales: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Erro ao carregar vendas: $e"), backgroundColor: AppColors.error),
+          );
+        }
+      }
+    });
   }
 
   @override

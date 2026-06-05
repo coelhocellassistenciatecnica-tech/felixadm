@@ -1,6 +1,6 @@
 class SaleItem {
   final int? id;
-  final int saleId;
+  final int? saleId;
   final int productId;
   final String productName;
   final String productBrand;
@@ -11,7 +11,7 @@ class SaleItem {
 
   SaleItem({
     this.id,
-    required this.saleId,
+    this.saleId,
     required this.productId,
     required this.productName,
     required this.productBrand,

@@ -1,12 +1,13 @@
 import 'package:flutter/foundation.dart';
 import '../models/product.dart';
-import '../utils/api_service.dart';
+import '../database/product_dao.dart'; // Importar o DAO de produtos
 
 class ProductProvider extends ChangeNotifier {
   List<Product> _products = [];
   List<Product> _lowStock = [];
   bool _loading = false;
   String _searchQuery = '';
+  final ProductDao _productDao = ProductDao(); // Instância do DAO
 
   List<Product> get products => _products;
   List<Product> get lowStock => _lowStock;
@@ -16,19 +17,10 @@ class ProductProvider extends ChangeNotifier {
     _loading = true;
     notifyListeners();
     try {
-      final List<dynamic> data = await ApiService.getProducts();
-      _products = data.map((json) => Product.fromMap(json)).toList();
-      
-      if (_searchQuery.isNotEmpty) {
-        _products = _products.where((p) => 
-          p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          p.brand.toLowerCase().contains(_searchQuery.toLowerCase())
-        ).toList();
-      }
-      
-      _lowStock = _products.where((p) => p.stockQuantity <= p.minStockAlert).toList();
+      _products = await _productDao.findAll(search: _searchQuery);
+      _lowStock = await _productDao.findLowStock();
     } catch (e) {
-      debugPrint('Error loading products: $e');
+      debugPrint('Error loading products from local DB: $e');
     } finally {
       _loading = false;
       notifyListeners();
@@ -42,40 +34,46 @@ class ProductProvider extends ChangeNotifier {
 
   Future<void> addProduct(Product product) async {
     try {
-      await ApiService.createProduct(product.toMap());
-      await loadProducts();
+      final id = await _productDao.insert(product);
+      final newProduct = product.copyWith(id: id);
+      _products.add(newProduct);
+      await loadProducts(); // Recarrega para atualizar a lista e o lowStock
     } catch (e) {
-      debugPrint('Error adding product: $e');
+      debugPrint('Error adding product to local DB: $e');
     }
   }
 
   Future<void> updateProduct(Product product) async {
     if (product.id == null) return;
     try {
-      await ApiService.updateProduct(product.id!, product.toMap());
-      await loadProducts();
+      await _productDao.update(product);
+      final index = _products.indexWhere((p) => p.id == product.id);
+      if (index != -1) {
+        _products[index] = product; // Atualiza o produto na lista
+        notifyListeners();
+      }
+      await loadProducts(); // Recarrega para atualizar a lista e o lowStock
     } catch (e) {
-      debugPrint('Error updating product: $e');
+      debugPrint('Error updating product in local DB: $e');
     }
   }
 
   Future<void> deleteProduct(int id) async {
     try {
-      await ApiService.deleteProduct(id);
-      await loadProducts();
+      await _productDao.delete(id);
+      _products.removeWhere((p) => p.id == id);
+      await loadProducts(); // Recarrega para atualizar a lista e o lowStock
     } catch (e) {
-      debugPrint('Error deleting product: $e');
+      debugPrint('Error deleting product from local DB: $e');
     }
   }
 
   Future<void> adjustStock(int id, int delta, String reason) async {
     try {
-      final p = _products.firstWhere((p) => p.id == id);
-      final newStock = p.stockQuantity + delta;
-      await ApiService.updateProduct(id, {'stock_quantity': newStock});
-      await loadProducts();
+      await _productDao.updateStock(id, delta);
+      await loadProducts(); // Recarrega para atualizar a lista e o lowStock
     } catch (e) {
-      debugPrint('Error adjusting stock: $e');
+      debugPrint('Error adjusting stock in local DB: $e');
     }
   }
 

@@ -19,8 +19,17 @@ class _ClientListScreenState extends State<ClientListScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ClientProvider>().loadClients();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await context.read<ClientProvider>().loadClients();
+      } catch (e) {
+        debugPrint("Error loading clients: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Erro ao carregar clientes: $e"), backgroundColor: AppColors.error),
+          );
+        }
+      }
     });
   }
 
@@ -136,7 +145,23 @@ class _ClientListScreenState extends State<ClientListScreen> {
         ],
       ),
     );
-    if (confirmed == true) await prov.deleteClient(id);
+    if (confirmed == true) {
+      try {
+        await prov.deleteClient(id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Cliente excluído com sucesso! ✓"), backgroundColor: AppColors.success),
+          );
+        }
+      } catch (e) {
+        debugPrint("Error deleting client: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Erro ao excluir cliente: $e"), backgroundColor: AppColors.error),
+          );
+        }
+      }
+    }
   }
 
   Widget _buildEmpty() {

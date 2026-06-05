@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'providers/auth_provider.dart';
+
 import 'providers/client_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/sale_provider.dart';
@@ -17,7 +18,8 @@ void main() async {
     WidgetsFlutterBinding.ensureInitialized();
     
     try {
-      await initializeDateFormatting('pt_BR', null);
+      await initializeDateFormatting(\'pt_BR\', null);
+      await DatabaseHelper().database; // Inicializa o banco de dados local
     } catch (e) {
       debugPrint('Erro ao inicializar data: $e');
     }

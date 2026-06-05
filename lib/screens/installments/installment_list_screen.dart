@@ -18,7 +18,18 @@ class _InstallmentListScreenState extends State<InstallmentListScreen> with Sing
   void initState() {
     super.initState();
     _tabs = TabController(length: 3, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.read<InstallmentProvider>().load());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await context.read<InstallmentProvider>().load();
+      } catch (e) {
+        debugPrint("Error loading installments: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Erro ao carregar parcelas: $e"), backgroundColor: AppColors.error),
+          );
+        }
+      }
+    });
   }
 
   @override
@@ -66,7 +77,18 @@ class _InstallmentListScreenState extends State<InstallmentListScreen> with Sing
       );
     }
     return RefreshIndicator(
-      onRefresh: () => context.read<InstallmentProvider>().load(),
+      onRefresh: () async {
+        try {
+          await context.read<InstallmentProvider>().load();
+        } catch (e) {
+          debugPrint("Error refreshing installments: $e");
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Erro ao atualizar parcelas: $e"), backgroundColor: AppColors.error),
+            );
+          }
+        }
+      },
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: items.length,

@@ -35,10 +35,20 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> with SingleTickerPr
 
   Future<void> _loadData() async {
     setState(() => _loading = true);
-    _sale = await context.read<SaleProvider>().getSaleById(widget.saleId);
-    _installments = await context.read<InstallmentProvider>().getBySale(widget.saleId);
-    _payments = await PaymentDao().findBySale(widget.saleId);
-    setState(() => _loading = false);
+    try {
+      _sale = await context.read<SaleProvider>().getSaleById(widget.saleId);
+      _installments = await context.read<InstallmentProvider>().getBySale(widget.saleId);
+      _payments = await PaymentDao().findBySale(widget.saleId);
+    } catch (e) {
+      debugPrint("Error loading sale details: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erro ao carregar detalhes da venda: $e"), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      setState(() => _loading = false);
+    }
   }
 
   @override
@@ -189,11 +199,26 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> with SingleTickerPr
 
   Future<void> _payInstallment(Installment inst) async {
     final prov = context.read<SaleProvider>();
-    await prov.registerPayment(
-      saleId: inst.saleId, clientId: inst.clientId, clientName: inst.clientName,
-      amount: inst.amount, paymentMethod: 'Dinheiro', installmentId: inst.id,
-    );
-    _loadData();
+    try {
+      await prov.registerPayment(
+        saleId: inst.saleId, clientId: inst.clientId, clientName: inst.clientName,
+        amount: inst.amount, paymentMethod: 'Dinheiro', installmentId: inst.id,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Pagamento de parcela registrado com sucesso! ✓"), backgroundColor: AppColors.success),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error paying installment: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erro ao registrar pagamento de parcela: $e"), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      _loadData();
+    }
   }
 
   Future<void> _registerPayment() async {
@@ -224,11 +249,26 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> with SingleTickerPr
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
             ElevatedButton(onPressed: () async {
               Navigator.pop(ctx);
-              await context.read<SaleProvider>().registerPayment(
-                saleId: _sale!.id!, clientId: _sale!.clientId, clientName: _sale!.clientName,
-                amount: amount, paymentMethod: method,
-              );
-              _loadData();
+              try {
+                await context.read<SaleProvider>().registerPayment(
+                  saleId: _sale!.id!, clientId: _sale!.clientId, clientName: _sale!.clientName,
+                  amount: amount, paymentMethod: method,
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Pagamento registrado com sucesso! ✓"), backgroundColor: AppColors.success),
+                  );
+                }
+              } catch (e) {
+                debugPrint("Error registering payment: $e");
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Erro ao registrar pagamento: $e"), backgroundColor: AppColors.error),
+                  );
+                }
+              } finally {
+                _loadData();
+              }
             }, child: const Text('Confirmar')),
           ],
         ),

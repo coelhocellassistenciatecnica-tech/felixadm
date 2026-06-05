@@ -115,7 +115,8 @@ class ApiService {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return json.decode(response.body);
     } else {
-      throw Exception('API Error: ${response.statusCode} - ${response.body}');
+      print("API Error: ${response.statusCode} - ${response.body}");
+      return null; // Retorna null em caso de erro para ser tratado na UI
     }
   }
 }

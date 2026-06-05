@@ -68,12 +68,33 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       minStockAlert: int.tryParse(_minStock.text) ?? 5,
       imagePath: _imagePath,
     );
-    if (widget.product == null) {
-      await prov.addProduct(product);
-    } else {
-      await prov.updateProduct(product);
+    try {
+      if (widget.product == null) {
+        await prov.addProduct(product);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Produto cadastrado com sucesso! ✓"), backgroundColor: AppColors.success),
+          );
+        }
+      } else {
+        await prov.updateProduct(product);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Produto atualizado com sucesso! ✓"), backgroundColor: AppColors.success),
+          );
+        }
+      }
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      debugPrint("Error saving product: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erro ao salvar produto: $e"), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      setState(() => _saving = false);
     }
-    if (mounted) Navigator.pop(context);
   }
 
   @override

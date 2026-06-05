@@ -30,21 +30,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _loading = true);
-    final now = DateTime.now();
-    final saleProv = context.read<SaleProvider>();
-    final summary = await saleProv.getMonthlySummary(now.year, now.month);
-    final profit = await saleProv.getEstimatedProfit(now.year, now.month);
-    final clientCount = await context.read<ClientProvider>().count();
-    final stockTotal = await context.read<ProductProvider>().totalStock();
-    await context.read<InstallmentProvider>().load();
-    setState(() {
-      _summary = summary;
-      _profit = profit;
-      _clientCount = clientCount;
-      _stockTotal = stockTotal;
-      _loading = false;
-    });
+    try {
+      final now = DateTime.now();
+      final saleProv = context.read<SaleProvider>();
+      final summary = await saleProv.getMonthlySummary(now.year, now.month);
+      final profit = await saleProv.getEstimatedProfit(now.year, now.month);
+      final clientCount = await context.read<ClientProvider>().count();
+      final stockTotal = await context.read<ProductProvider>().totalStock();
+      await context.read<InstallmentProvider>().load();
+      setState(() {
+        _summary = summary;
+        _profit = profit;
+        _clientCount = clientCount;
+        _stockTotal = stockTotal;
+        _loading = false;
+      });
+    } catch (e) {
+      debugPrint("Error loading dashboard data: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erro ao carregar dados do dashboard: $e"), backgroundColor: AppColors.error),
+        );
+      }
+      setState(() => _loading = false);
+    }
   }
 
   Future<void> _checkAutoBackup() async {
@@ -54,10 +63,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         await svc.createBackup();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Backup automático realizado! ✓'), backgroundColor: AppColors.success),
+            const SnackBar(content: Text("Backup automático realizado! ✓"), backgroundColor: AppColors.success),
           );
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint("Error during auto backup: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Erro ao realizar backup automático: $e"), backgroundColor: AppColors.error),
+          );
+        }
+      }
     }
   }
 
@@ -283,29 +299,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showNotifications(BuildContext ctx, InstallmentProvider inst) {
-    showModalBottomSheet(
-      context: ctx,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Notificações', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 16),
-            if (inst.overdue.isEmpty)
-              const Center(child: Text('Nenhuma notificação no momento 🎉'))
-            else
-              ...inst.overdue.take(5).map((i) => ListTile(
-                leading: const Icon(Icons.warning_rounded, color: AppColors.overdue),
-                title: Text('Parcela de ${i.clientName}', style: const TextStyle(fontSize: 13)),
-                subtitle: Text('${AppFormatters.currency(i.remaining)} - Venc. ${AppFormatters.date(i.dueDate)}', style: const TextStyle(fontSize: 12)),
-                dense: true,
-              )),
-          ],
+    try {
+      await inst.load(); // Ensure installments are loaded before showing notifications
+      showModalBottomSheet(
+        context: ctx,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        builder: (_) => Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Notificações", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 16),
+              if (inst.overdue.isEmpty)
+                const Center(child: Text("Nenhuma notificação no momento 🎉"))
+              else
+                ...inst.overdue.take(5).map((i) => ListTile(
+                  leading: const Icon(Icons.warning_rounded, color: AppColors.overdue),
+                  title: Text("Parcela de ${i.clientName}", style: const TextStyle(fontSize: 13)),
+                  subtitle: Text("${AppFormatters.currency(i.remaining)} - Venc. ${AppFormatters.date(i.dueDate)}", style: const TextStyle(fontSize: 12)),
+                  dense: true,
+                )),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      debugPrint("Error showing notifications: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(content: Text("Erro ao carregar notificações: $e"), backgroundColor: AppColors.error),
+        );
+      }
+    }
   }
 }
