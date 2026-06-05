@@ -30,6 +30,12 @@ jobs:
       - name: Instalar dependências
         run: flutter pub get
 
+      - name: Criar local.properties com versão do app
+        run: |
+          echo "flutter.versionCode=1" >> android/local.properties
+          echo "flutter.versionName=1.0.0" >> android/local.properties
+          echo "sdk.dir=$ANDROID_SDK_ROOT" >> android/local.properties
+
       - name: Build APK Release
         run: flutter build apk --release --split-per-abi
 
@@ -45,7 +51,7 @@ jobs:
 
       - name: Informações do build
         run: |
-          echo "✅ APKs gerados!"
+          echo "✅ APKs gerados com sucesso!"
           ls -lh build/app/outputs/flutter-apk/*.apk
           echo ""
-          echo "Recomendado para a maioria dos celulares: arm64-v8a"
+          echo "📱 Recomendado para a maioria dos celulares: app-arm64-v8a-release.apk"
